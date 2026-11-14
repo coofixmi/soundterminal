@@ -701,6 +701,44 @@ class SettingsDialog(QDialog):
         else:
             self.download_dir_warning.setText("у вас нет каталога по умолчанию")
 
+    # ---- updates ----
+    def on_update_clicked(self):
+        if not hasattr(self.mw, "start_self_update"):
+            self.set_update_status("Обновление недоступно в этой сборке.")
+            return
+        reply = QMessageBox.question(
+            self,
+            "Обновление",
+            "Скачать и применить обновление из GitHub?\n\n"
+            f"Репозиторий: {UPDATE_REPO}\n"
+            f"Ветка: {UPDATE_BRANCH}\n"
+            f"Папка: {UPDATE_REPO_PATH}\n\n"
+            "Пользовательские данные (config, data, cache, sounds, backups) будут сохранены.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            self.mw.start_self_update()
+        except Exception as e:
+            self.set_update_status(f"Ошибка запуска обновления: {e}")
+
+    def set_update_status(self, text: str):
+        try:
+            if hasattr(self, "update_status_label") and self.update_status_label:
+                self.update_status_label.setText(str(text))
+        except Exception:
+            pass
+
+    def set_update_busy(self, busy: bool):
+        try:
+            if hasattr(self, "update_btn") and self.update_btn:
+                self.update_btn.setEnabled(not busy)
+                self.update_btn.setText("Обновление..." if busy else "Обновить из GitHub")
+        except Exception:
+            pass
+
     # ---- tests ----
     def play_test_sound(self):
         tone_path = os.path.join(tempfile.gettempdir(), "soundpad_test_tone.wav")
